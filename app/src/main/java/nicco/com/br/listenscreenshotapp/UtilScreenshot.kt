@@ -9,31 +9,23 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.content.ContextCompat
-import java.lang.ref.WeakReference
 
-
-class UtilScreenshot {
-    private var activityWeakReference: WeakReference<Activity?>? = null
-    private var listener: ScreenshotDetectionListener? = null
-
-    fun ScreenshotDetectionDelegate(
-        activityWeakReference: Activity?,
-        listener: ScreenshotDetectionListener?
-    ) {
-        this.activityWeakReference = WeakReference(activityWeakReference)
-        this.listener = listener
-    }
+class UtilScreenshot(
+    activityWeakReference: Activity ,  listener: ScreenshotDetectionListener
+) {
+    private var activityWeakReference: Activity = activityWeakReference
+    private var listener: ScreenshotDetectionListener? = listener
 
     fun startScreenshotDetection() {
-        activityWeakReference?.get()?.contentResolver?.registerContentObserver(
+        activityWeakReference.contentResolver?.registerContentObserver(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 true,
-                contentObserver!!
+            contentObserver
             )
     }
 
     fun stopScreenshotDetection() {
-        activityWeakReference?.get()?.contentResolver?.unregisterContentObserver(contentObserver)
+        activityWeakReference.contentResolver?.unregisterContentObserver(contentObserver)
     }
 
     private val contentObserver: ContentObserver = object : ContentObserver(android.os.Handler()) {
@@ -49,7 +41,7 @@ class UtilScreenshot {
             super.onChange(selfChange, uri)
             if (isReadExternalStoragePermissionGranted()) {
                 val path =
-                    activityWeakReference?.get()?.let { getFilePathFromContentResolver(it, uri) }
+                    getFilePathFromContentResolver(activityWeakReference, uri)
                 if (isScreenshotPath(path)) {
                     onScreenCaptured(path)
                 }
@@ -97,7 +89,7 @@ class UtilScreenshot {
     }
 
     private fun isReadExternalStoragePermissionGranted(): Boolean {
-        return activityWeakReference?.get()?.let {
+        return activityWeakReference.let {
             ContextCompat.checkSelfPermission(
                 it,
                 READ_EXTERNAL_STORAGE
